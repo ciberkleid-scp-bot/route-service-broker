@@ -1,0 +1,14 @@
+test:
+  services:
+    - name: route-service-redis
+      type: broker
+      broker: rediscloud
+      plan: 30mb 
+      useExisting: true
+stage:
+  services:
+    - name: route-service-redis
+      type: broker
+      broker: rediscloud
+      plan: 30mb
+      useExisting: true

@@ -1,0 +1,7 @@
+---
+applications:
+- name: route-service-broker
+  memory: 1G
+  path: build/libs/route-service-broker-0.0.1.BUILD-SNAPSHOT.jar
+  services:
+  - route-service-redis

@@ -10,13 +10,15 @@ buildscript {
 	}
 }
 
+apply plugin: 'maven-publish'
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+apply from: 'gradle/pipeline.gradle'
 
-group = 'org.springframework.cloud'
-version = '0.0.1.BUILD-SNAPSHOT'
+group = 'io.pivotal'
+version = getProp('newVersion') ?: '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.8
 
 repositories {
@@ -26,6 +28,9 @@ repositories {
 
 ext {
 	springCloudVersion = 'Finchley.RELEASE'
+	projectGroupId = project.group
+	projectArtifactId = project.name
+	projectVersion = project.version
 }
 
 dependencyManagement {
@@ -49,4 +54,28 @@ dependencies {
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 	testCompile('io.projectreactor:reactor-test')
 	testCompile('org.springframework.security:spring-security-test')
+}
+
+publishing {
+        repositories {
+                maven {
+                        url getProp('REPO_WITH_BINARIES_FOR_UPLOAD') ?: 'http://localhost:8081/artifactory/libs-release-local'
+                        credentials {
+                                username getProp('M2_SETTINGS_REPO_USERNAME') ?: 'admin'
+                                password getProp('M2_SETTINGS_REPO_PASSWORD') ?: 'password'
+                        }
+                }
+        }
+        publications {
+                mavenJava(MavenPublication) {
+                        artifactId project.name
+                        from components.java
+                }
+        }
+}
+
+String getProp(String propName) {
+        return hasProperty(propName) ?
+                        (getProperty(propName) ?: System.properties[propName]) : System.properties[propName] ?:
+                        System.getenv(propName)
 }
