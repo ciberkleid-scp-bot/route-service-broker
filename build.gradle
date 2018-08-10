@@ -18,7 +18,7 @@ apply plugin: 'io.spring.dependency-management'
 apply from: 'gradle/pipeline.gradle'
 
 group = 'io.pivotal'
-version = getProp('newVersion') ?: '0.0.1-SNAPSHOT'
+version = getProp('newVersion') ?: '0.0.1.BUILD-SNAPSHOT'
 sourceCompatibility = 1.8
 
 repositories {
