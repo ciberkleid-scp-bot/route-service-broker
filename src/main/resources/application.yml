@@ -11,6 +11,13 @@ spring:
           tags:
           - route-service
           - logging
+          metadata: # optional
+            imageUrl: https://static-content.cfapps.io/images/service-broker-icon.png
+            #imageUrl: ${vcap.application.uris[0]}/static/images/service-broker-icon.png
+            displayName: A S1P Demo Gateway Service
+            longDescription: Spring Cloud Gateway service, intended to be bound as a route service.
+            documentationUrl: https://docs.cloudfoundry.org/devguide/services/route-binding.html
+            providerDisplayName: Pivotal
           plans:
           - id: 3944a61c-ed68-45c5-b649-a99d1f301c69
             name: standard

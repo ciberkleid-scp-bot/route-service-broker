@@ -40,6 +40,7 @@ public class LoggingGatewayFilterFactory extends AbstractGatewayFilterFactory<Ob
 	@Override
 	public GatewayFilter apply(Object config) {
 		return (exchange, chain) -> {
+
 			ServerHttpRequest request = exchange.getRequest();
 
 			String serviceInstanceId = getServiceInstanceId(exchange);

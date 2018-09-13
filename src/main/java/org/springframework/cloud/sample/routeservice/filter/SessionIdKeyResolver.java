@@ -18,7 +18,6 @@ package org.springframework.cloud.sample.routeservice.filter;
 
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
 public class SessionIdKeyResolver implements KeyResolver {

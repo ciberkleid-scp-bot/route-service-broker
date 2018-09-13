@@ -20,12 +20,13 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
-import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.cloud.gateway.handler.predicate.CloudFoundryRouteServiceRoutePredicateFactory;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
+import org.springframework.cloud.sample.routeservice.filter.CustomRateLimiterGatewayFilterFactory;
 import org.springframework.cloud.sample.routeservice.filter.LoggingGatewayFilterFactory;
 import org.springframework.cloud.sample.routeservice.filter.SessionIdKeyResolver;
+import org.springframework.cloud.sample.routeservice.servicebroker.RateLimiters;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.server.ServerWebExchange;
@@ -54,9 +55,13 @@ public class RouteConfiguration {
 	}
 
 	@Bean
-	public RedisRateLimiter redisRateLimiter() {
-		return new RedisRateLimiter(5, 5);
+	public RateLimiters rateLimiters() { return new RateLimiters();}
+
+	@Bean
+	public GatewayFilter customRateLimiter() {
+		return new CustomRateLimiterGatewayFilterFactory(rateLimiters()).apply(config -> {});
 	}
+
 
 	@Bean
 	public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
@@ -67,10 +72,7 @@ public class RouteConfiguration {
 						.predicate(cloudFoundryPredicate())
 						.filters(f -> { f
 							.filter(logger())
-							.requestRateLimiter(config -> config
-									.setRateLimiter(redisRateLimiter())
-									.setKeyResolver(keyResolver())
-							)
+							.filter(customRateLimiter())
 							.requestHeaderToRequestUri(X_CF_FORWARDED_URL);
 							return f;
 						})

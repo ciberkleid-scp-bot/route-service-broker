@@ -5,10 +5,20 @@ test:
       broker: rediscloud
       plan: 30mb 
       useExisting: true
+    - name: route-service-mongodb
+      type: broker
+      broker: mlab
+      plan: free
+      useExisting: true
 stage:
   services:
     - name: route-service-redis
       type: broker
       broker: rediscloud
       plan: 30mb
+      useExisting: true
+    - name: route-service-mongodb
+      type: broker
+      broker: mlab
+      plan: free
       useExisting: true
