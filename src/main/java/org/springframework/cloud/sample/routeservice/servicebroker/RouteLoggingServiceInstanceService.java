@@ -34,7 +34,7 @@ public class RouteLoggingServiceInstanceService implements ServiceInstanceServic
 
 	RateLimiters rateLimiters;
 
-	public RouteLoggingServiceInstanceService(ServiceInstanceRepository serviceInstanceRepository, RateLimiters rateLimiters) {
+	public RouteLoggingServiceInstanceService(ServiceInstanceRepository serviceInstanceRepository, RateLimiters rateLimiters ) {
 		this.serviceInstanceRepository = serviceInstanceRepository;
 		this.rateLimiters = rateLimiters;
 	}
@@ -42,27 +42,24 @@ public class RouteLoggingServiceInstanceService implements ServiceInstanceServic
 	@Override
 	public Mono<CreateServiceInstanceResponse> createServiceInstance(CreateServiceInstanceRequest request) {
 
-		// Assume sample create-service request:
-		// cf create-service <svc-name> <plan> <instance-name> -c '{"log-level": "DEBUG", "replenish-rate": 5, "burst-capacity": 10}'
-
-		// Save service instance configuration to persistent store
 		ServiceInstance serviceInstance = ServiceInstance.builder()
 				.serviceInstanceId(request.getServiceInstanceId())
-				.logLevel((String)request.getParameters().get("log-level"))
-				.burstCapacity((Integer)request.getParameters().get("replenish-rate"))
-				.replenishRate((Integer)request.getParameters().get("burst-capacity"))
+				.serviceDefinitionId(request.getServiceDefinitionId())
+				.planId(request.getPlanId())
+//				.logLevel((String)request.getParameters().get("log-level"))
 				.build();
 
 		log.info("Received create-service request: {}", serviceInstance.toString());
 
 		serviceInstanceRepository.save(serviceInstance);
 
+		log.info("Saved new service instance info [serviceInstanceId={}].", serviceInstance.getServiceInstanceId());
+		log.info("Service instance count: {}", serviceInstanceRepository.count());
 		if (log.isInfoEnabled()) {
-			log.info("Processed create-service request:");
 			serviceInstanceRepository.findAll().forEach(System.out::println);
 		}
 
-		rateLimiters.addLimiter(serviceInstance.getServiceInstanceId(), serviceInstance.getReplenishRate(), serviceInstance.getBurstCapacity());
+		rateLimiters.addLimiter(serviceInstance.getServiceInstanceId(), serviceInstance.getServiceDefinitionId(), serviceInstance.getPlanId());
 
 		return Mono.just(CreateServiceInstanceResponse.builder()
 				.instanceExisted(false)
@@ -73,11 +70,16 @@ public class RouteLoggingServiceInstanceService implements ServiceInstanceServic
 	@Override
 	public Mono<DeleteServiceInstanceResponse> deleteServiceInstance(DeleteServiceInstanceRequest request) {
 
-		String instanceId = request.getServiceInstanceId();
+		String serviceInstanceId = request.getServiceInstanceId();
 
-		log.info("Received delete-service request: {}", instanceId);
-		serviceInstanceRepository.deleteById(instanceId);
-		rateLimiters.removeLimiter(instanceId);
+		log.info("Received delete-service request: {}", serviceInstanceId);
+
+		serviceInstanceRepository.deleteById(serviceInstanceId);
+
+		log.info("Deleted service instance info [serviceInstanceId={}].", serviceInstanceId);
+		log.info("Service instance count: {}", serviceInstanceRepository.count());
+
+		rateLimiters.removeLimiter(serviceInstanceId);
 
 		return Mono.just(DeleteServiceInstanceResponse.builder()
 				.build());

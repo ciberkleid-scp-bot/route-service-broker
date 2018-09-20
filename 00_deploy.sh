@@ -1,12 +1,16 @@
 # CLEANUP
 
-cf urs cfapps.io my-gateway-basic --hostname cool-app-basic -f
-cf unmap-route cool-app cfapps.io --hostname cool-app-basic
-cf ds my-gateway-basic -f
+cf urs cfapps.io cyi-gateway-trial --hostname cool-app-trial -f
+cf unmap-route cool-app cfapps.io --hostname cool-app-trial
+cf ds cyi-gateway-trial -f
 
-cf urs cfapps.io my-gateway-premium --hostname cool-app-premium -f
+cf urs cfapps.io cyi-gateway-standard --hostname cool-app-standard -f
+cf unmap-route cool-app cfapps.io --hostname cool-app-standard
+cf ds cyi-gateway-standard -f
+
+cf urs cfapps.io cyi-gateway-premium --hostname cool-app-premium -f
 cf unmap-route cool-app cfapps.io --hostname cool-app-premium
-cf ds my-gateway-premium -f
+cf ds cyi-gateway-premium -f
 
 cf delete-service-broker route-service -f
 
@@ -31,10 +35,14 @@ cf push
 
 cf create-service-broker route-service admin supersecret https://route-service-broker.cfapps.io --space-scoped
 
-cf cs route-service standard my-gateway-basic  -c '{"log-level": "DEBUG", "replenish-rate": 3, "burst-capacity": 3}'
-cf map-route cool-app cfapps.io --hostname cool-app-basic
-cf brs cfapps.io my-gateway-basic --hostname cool-app-basic
+cf cs route-service trial cyi-gateway-trial 
+cf map-route cool-app cfapps.io --hostname cool-app-trial
+cf brs cfapps.io cyi-gateway-trial --hostname cool-app-trial
 
-cf cs route-service standard my-gateway-premium  -c '{"log-level": "DEBUG", "replenish-rate": 10, "burst-capacity": 10}'
+cf cs route-service standard cyi-gateway-standard
+cf map-route cool-app cfapps.io --hostname cool-app-standard
+cf brs cfapps.io cyi-gateway-standard --hostname cool-app-standard
+
+cf cs route-service premium cyi-gateway-premium
 cf map-route cool-app cfapps.io --hostname cool-app-premium
-cf brs cfapps.io my-gateway-premium --hostname cool-app-premium
+cf brs cfapps.io cyi-gateway-premium --hostname cool-app-premium

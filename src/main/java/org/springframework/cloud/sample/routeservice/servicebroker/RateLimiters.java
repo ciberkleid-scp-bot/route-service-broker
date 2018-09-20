@@ -6,11 +6,13 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
+import org.springframework.cloud.sample.routeservice.servicebroker.ServiceCatalogConfig.Plan;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -24,6 +26,9 @@ public class RateLimiters implements ApplicationContextAware, InitializingBean {
     @Autowired
     private ServiceInstanceRepository serviceInstanceRepository;
 
+    @Autowired
+    ServiceCatalogConfig serviceCatalogConfig;
+
     public RateLimiters() {
          redisRateLimiterMap = new HashMap<String, RedisRateLimiter>();
     }
@@ -32,10 +37,21 @@ public class RateLimiters implements ApplicationContextAware, InitializingBean {
             return redisRateLimiterMap.get(instanceId);
     }
 
-    public void addLimiter(String instanceId, int replenishRate, int burstCapacity) {
+    public void addLimiter(String serviceInstanceId, String serviceDefinitionId, String planId) {
+
+        List<Plan> plans = serviceCatalogConfig.getServices().stream()
+                .filter(s -> s.getId().equals(serviceDefinitionId))
+                .findFirst().get()
+                .getPlans();
+        Plan plan = plans.stream()
+                .filter(p -> p.getId().equals(planId))
+                .findFirst().get();
+        int replenishRate =((Plan) plan).getReplenishRate();
+        int burstCapacity = ((Plan) plan).getBurstCapacity();
+
         RedisRateLimiter rrl = new RedisRateLimiter(replenishRate, burstCapacity);
         rrl.setApplicationContext(applicationContext);
-        redisRateLimiterMap.put(instanceId, rrl);
+        redisRateLimiterMap.put(serviceInstanceId, rrl);
         log.info("RateLimiters size = {}", redisRateLimiterMap.size());
     }
 
@@ -52,6 +68,6 @@ public class RateLimiters implements ApplicationContextAware, InitializingBean {
     @Override
     public void afterPropertiesSet() {
         // load map from repo
-        serviceInstanceRepository.findAll().forEach(e -> addLimiter(e.getServiceInstanceId(), e.getReplenishRate(), e.getBurstCapacity()));
+        serviceInstanceRepository.findAll().forEach(e -> addLimiter(e.getServiceInstanceId(), e.getServiceDefinitionId(), e.getPlanId()));
     }
 }

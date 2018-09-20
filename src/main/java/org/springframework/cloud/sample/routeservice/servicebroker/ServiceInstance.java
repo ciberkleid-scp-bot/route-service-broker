@@ -15,11 +15,11 @@ public class ServiceInstance {
     @Getter
     private String serviceInstanceId;
     @Getter
-    private String logLevel = "INFO";
+    private String serviceDefinitionId;
     @Getter
-    private Integer replenishRate = null;
-    @Getter
-    private Integer burstCapacity = null;
+    private String planId = null;
+//    @Getter
+//    private String logLevel = "INFO";
 
     public static ServiceInstanceBuilder builder() {
         return new ServiceInstanceBuilder();
@@ -29,9 +29,9 @@ public class ServiceInstance {
     public String toString() {
         return "ServiceInstance{" +
                 "serviceInstanceId='" + serviceInstanceId + '\'' +
-                ", logLevel='" + logLevel + '\'' +
-                ", replenishRate='" + replenishRate + '\'' +
-                ", burstCapacity='" + burstCapacity + '\'' +
+                "serviceDefinitionId='" + serviceDefinitionId + '\'' +
+                "planId='" + planId + '\'' +
+//                ", logLevel='" + logLevel + '\'' +
                 '}';
     }
 
@@ -39,32 +39,32 @@ public class ServiceInstance {
     static class ServiceInstanceBuilder {
 
         private String serviceInstanceId;
-        private String logLevel;
-        private Integer replenishRate;
-        private Integer burstCapacity;
+        private String serviceDefinitionId;
+        private String planId;
+//        private String logLevel;
 
         ServiceInstanceBuilder serviceInstanceId(String serviceInstanceId) {
             this.serviceInstanceId = serviceInstanceId;
             return this;
         }
 
-        ServiceInstanceBuilder logLevel(String logLevel) {
-            this.logLevel = logLevel;
+        ServiceInstanceBuilder serviceDefinitionId(String serviceDefinitionId) {
+            this.serviceDefinitionId = serviceDefinitionId;
             return this;
         }
 
-        ServiceInstanceBuilder replenishRate(Integer replenishRate) {
-            this.replenishRate = replenishRate;
+        ServiceInstanceBuilder planId(String planId) {
+            this.planId = planId;
             return this;
         }
 
-        ServiceInstanceBuilder burstCapacity(Integer burstCapacity) {
-            this.burstCapacity = burstCapacity;
-            return this;
-        }
+//        ServiceInstanceBuilder logLevel(String logLevel) {
+//            this.logLevel = logLevel;
+//            return this;
+//        }
 
         ServiceInstance build() {
-            return new ServiceInstance(serviceInstanceId, logLevel, replenishRate, burstCapacity);
+            return new ServiceInstance(serviceInstanceId, serviceDefinitionId, planId);
         }
 
     }
