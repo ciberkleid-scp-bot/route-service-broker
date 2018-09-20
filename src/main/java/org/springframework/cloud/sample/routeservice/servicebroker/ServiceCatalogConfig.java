@@ -38,10 +38,22 @@ public class ServiceCatalogConfig {
         private String id;
         @Getter
         @Setter
-        private int replenishRate;
+        private int trialReplenishRate;
         @Getter
         @Setter
-        private int burstCapacity;
+        private int trialBurstCapacity;
+        @Getter
+        @Setter
+        private int basicReplenishRate;
+        @Getter
+        @Setter
+        private int basicBurstCapacity;
+        @Getter
+        @Setter
+        private int premiumReplenishRate;
+        @Getter
+        @Setter
+        private int premiumBurstCapacity;
     }
 
 }

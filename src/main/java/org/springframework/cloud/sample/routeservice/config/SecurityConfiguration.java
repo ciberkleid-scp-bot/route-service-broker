@@ -37,12 +37,12 @@ public class SecurityConfiguration {
 		http
 				.csrf().disable()
 				.authorizeExchange()
-					.pathMatchers("/v2/**").hasRole("ADMIN")
-					.matchers(EndpointRequest.to("info", "health")).permitAll()
-					.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
-					.pathMatchers("/**").permitAll()
-				.and()
-				.httpBasic();
+				.pathMatchers("/v2/**").hasRole("ADMIN")
+				.matchers(EndpointRequest.to("info", "health")).permitAll()
+				.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
+				.pathMatchers("/images/**").permitAll()
+				.pathMatchers("/**").authenticated()
+				.and().httpBasic();
 		return http.build();
 	}
 
@@ -52,15 +52,12 @@ public class SecurityConfiguration {
 	}
 
 	@Bean
-	public MapReactiveUserDetailsService userDetailsManager() {
-		return new MapReactiveUserDetailsService(adminUser());
+	public MapReactiveUserDetailsService userDetailsService() {
+		UserDetails admin = User.builder().username("admin").password(passwordEncoder().encode("supersecret")).roles("ADMIN").build();
+		UserDetails trial = User.builder().username("trial").password(passwordEncoder().encode("pw")).roles("TRIAL").build();
+		UserDetails basic = User.builder().username("basic").password(passwordEncoder().encode("pw")).roles("BASIC").build();
+		UserDetails premium = User.builder().username("premium").password(passwordEncoder().encode("pw")).roles("PREMIUM").build();
+		return new MapReactiveUserDetailsService(admin, trial, premium, basic);
 	}
 
-	private UserDetails adminUser() {
-		return User.builder()
-				.username("admin")
-				.password(passwordEncoder().encode("supersecret"))
-				.roles("ADMIN")
-				.build();
-	}
 }

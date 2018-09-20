@@ -43,15 +43,40 @@ public class RateLimiters implements ApplicationContextAware, InitializingBean {
                 .filter(s -> s.getId().equals(serviceDefinitionId))
                 .findFirst().get()
                 .getPlans();
+
         Plan plan = plans.stream()
                 .filter(p -> p.getId().equals(planId))
                 .findFirst().get();
-        int replenishRate =((Plan) plan).getReplenishRate();
-        int burstCapacity = ((Plan) plan).getBurstCapacity();
 
-        RedisRateLimiter rrl = new RedisRateLimiter(replenishRate, burstCapacity);
+        int replenishRate;
+        int burstCapacity;
+        RedisRateLimiter rrl;
+        
+        // Add trial rate limiter
+        replenishRate = ((Plan) plan).getTrialReplenishRate();
+        burstCapacity = ((Plan) plan).getTrialBurstCapacity();
+
+        rrl = new RedisRateLimiter(replenishRate, burstCapacity);
         rrl.setApplicationContext(applicationContext);
-        redisRateLimiterMap.put(serviceInstanceId, rrl);
+        redisRateLimiterMap.put(serviceInstanceId.concat("_TRIAL"), rrl);
+        log.info("RateLimiters size = {}", redisRateLimiterMap.size());
+
+        // Add basic rate limiter
+        replenishRate = ((Plan) plan).getBasicReplenishRate();
+        burstCapacity = ((Plan) plan).getBasicBurstCapacity();
+
+        rrl = new RedisRateLimiter(replenishRate, burstCapacity);
+        rrl.setApplicationContext(applicationContext);
+        redisRateLimiterMap.put(serviceInstanceId.concat("_BASIC"), rrl);
+        log.info("RateLimiters size = {}", redisRateLimiterMap.size());
+
+        // Add premium rate limiter
+        replenishRate = ((Plan) plan).getPremiumReplenishRate();
+        burstCapacity = ((Plan) plan).getPremiumBurstCapacity();
+
+        rrl = new RedisRateLimiter(replenishRate, burstCapacity);
+        rrl.setApplicationContext(applicationContext);
+        redisRateLimiterMap.put(serviceInstanceId.concat("_PREMIUM"), rrl);
         log.info("RateLimiters size = {}", redisRateLimiterMap.size());
     }
 

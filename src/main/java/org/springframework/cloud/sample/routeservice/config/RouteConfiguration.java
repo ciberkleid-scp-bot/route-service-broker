@@ -23,9 +23,8 @@ import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.cloud.gateway.handler.predicate.CloudFoundryRouteServiceRoutePredicateFactory;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
-import org.springframework.cloud.sample.routeservice.filter.CustomRateLimiterGatewayFilterFactory;
 import org.springframework.cloud.sample.routeservice.filter.LoggingGatewayFilterFactory;
-import org.springframework.cloud.sample.routeservice.filter.SessionIdKeyResolver;
+import org.springframework.cloud.sample.routeservice.filter.SubscriptionHandlerGatewayFilterFactory;
 import org.springframework.cloud.sample.routeservice.servicebroker.RateLimiters;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,11 +37,6 @@ import static org.springframework.cloud.gateway.handler.predicate.CloudFoundryRo
 @Configuration
 @AutoConfigureBefore(GatewayAutoConfiguration.class)
 public class RouteConfiguration {
-
-	@Bean
-	public KeyResolver keyResolver() {
-		return new SessionIdKeyResolver();
-	}
 
 	@Bean
 	public Predicate<ServerWebExchange> cloudFoundryPredicate() {
@@ -58,13 +52,13 @@ public class RouteConfiguration {
 	public RateLimiters rateLimiters() { return new RateLimiters();}
 
 	@Bean
-	public GatewayFilter customRateLimiter() {
-		return new CustomRateLimiterGatewayFilterFactory(rateLimiters()).apply(config -> {});
+	public GatewayFilter subscriptionRateLimiter(KeyResolver resolver) {
+		return new SubscriptionHandlerGatewayFilterFactory(rateLimiters(), resolver).apply(config -> {});
 	}
 
 
 	@Bean
-	public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+	public RouteLocator customRouteLocator(RouteLocatorBuilder builder, KeyResolver resolver) {
 		return builder.routes()
 				.route(r -> r
 						.path("/instanceId/{instanceId}")
@@ -72,11 +66,11 @@ public class RouteConfiguration {
 						.predicate(cloudFoundryPredicate())
 						.filters(f -> { f
 							.filter(logger())
-							.filter(customRateLimiter())
+							.filter(subscriptionRateLimiter(resolver))
 							.requestHeaderToRequestUri(X_CF_FORWARDED_URL);
 							return f;
 						})
-						.uri("https://cloud.spring.io"))
+						.uri("no://op"))
 				.build();
 	}
 }
