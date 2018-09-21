@@ -15,6 +15,12 @@ public class ServiceCatalogConfig {
     @Getter
     private List<Service> services;
 
+    public enum Type {
+        TRIAL,
+        BASIC,
+        PREMIUM;
+    }
+
     ServiceCatalogConfig() {
         this.services = new ArrayList<>();
     }
@@ -38,22 +44,21 @@ public class ServiceCatalogConfig {
         private String id;
         @Getter
         @Setter
-        private int trialReplenishRate;
+        private List<Config> configs;
+    }
+
+    @NoArgsConstructor
+    static class Config {
+        @Id
         @Getter
         @Setter
-        private int trialBurstCapacity;
+        private Type name;
         @Getter
         @Setter
-        private int basicReplenishRate;
+        private int replenishRate;
         @Getter
         @Setter
-        private int basicBurstCapacity;
-        @Getter
-        @Setter
-        private int premiumReplenishRate;
-        @Getter
-        @Setter
-        private int premiumBurstCapacity;
+        private int burstCapacity;
     }
 
 }

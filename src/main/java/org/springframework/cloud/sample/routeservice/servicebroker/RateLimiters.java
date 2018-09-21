@@ -48,36 +48,16 @@ public class RateLimiters implements ApplicationContextAware, InitializingBean {
                 .filter(p -> p.getId().equals(planId))
                 .findFirst().get();
 
-        int replenishRate;
-        int burstCapacity;
-        RedisRateLimiter rrl;
-        
-        // Add trial rate limiter
-        replenishRate = ((Plan) plan).getTrialReplenishRate();
-        burstCapacity = ((Plan) plan).getTrialBurstCapacity();
+        plan.getConfigs().forEach(config -> {
+            String name = config.getName().name();
+            int replenishRate = config.getReplenishRate();
+            int burstCapacity = config.getBurstCapacity();
+            RedisRateLimiter rrl = new RedisRateLimiter(replenishRate, burstCapacity);
+            rrl.setApplicationContext(applicationContext);
+            redisRateLimiterMap.put(serviceInstanceId.concat("_" + name.toUpperCase()), rrl);
+            log.info("RateLimiters size = {}", redisRateLimiterMap.size());
 
-        rrl = new RedisRateLimiter(replenishRate, burstCapacity);
-        rrl.setApplicationContext(applicationContext);
-        redisRateLimiterMap.put(serviceInstanceId.concat("_TRIAL"), rrl);
-        log.info("RateLimiters size = {}", redisRateLimiterMap.size());
-
-        // Add basic rate limiter
-        replenishRate = ((Plan) plan).getBasicReplenishRate();
-        burstCapacity = ((Plan) plan).getBasicBurstCapacity();
-
-        rrl = new RedisRateLimiter(replenishRate, burstCapacity);
-        rrl.setApplicationContext(applicationContext);
-        redisRateLimiterMap.put(serviceInstanceId.concat("_BASIC"), rrl);
-        log.info("RateLimiters size = {}", redisRateLimiterMap.size());
-
-        // Add premium rate limiter
-        replenishRate = ((Plan) plan).getPremiumReplenishRate();
-        burstCapacity = ((Plan) plan).getPremiumBurstCapacity();
-
-        rrl = new RedisRateLimiter(replenishRate, burstCapacity);
-        rrl.setApplicationContext(applicationContext);
-        redisRateLimiterMap.put(serviceInstanceId.concat("_PREMIUM"), rrl);
-        log.info("RateLimiters size = {}", redisRateLimiterMap.size());
+        });
     }
 
     public void removeLimiter(String instanceId) {

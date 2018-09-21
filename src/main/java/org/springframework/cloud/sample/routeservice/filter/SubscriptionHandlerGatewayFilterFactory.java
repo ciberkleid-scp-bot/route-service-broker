@@ -49,6 +49,7 @@ public class SubscriptionHandlerGatewayFilterFactory extends AbstractGatewayFilt
             String serviceId = getServiceInstanceId(exchange);
 
             return getUserRole(exchange).single().flatMap(role -> {
+                // TODO: If limiter is null (e.g. no premium plan was defined), default to trial? Currently line "limiter.isAllowed" below throws NullPointerException
                 RedisRateLimiter limiter = rateLimiters.getLimiter(serviceId.concat(role.getAuthority().substring(4)));
 
                 String forwardedUrl = exchange.getRequest().getHeaders().getFirst(X_CF_FORWARDED_URL);
