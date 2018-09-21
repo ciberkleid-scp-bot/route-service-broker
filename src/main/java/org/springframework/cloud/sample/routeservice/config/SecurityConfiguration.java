@@ -20,6 +20,7 @@ import org.springframework.boot.actuate.autoconfigure.security.reactive.Endpoint
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
@@ -27,21 +28,38 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
+
+import static org.springframework.cloud.gateway.handler.predicate.CloudFoundryRouteServiceRoutePredicateFactory.X_CF_FORWARDED_URL;
 
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfiguration {
 
+	private ServerWebExchangeMatcher matcher = exchange -> {
+
+		String forwardedUrl = exchange.getRequest().getHeaders().getFirst(X_CF_FORWARDED_URL);
+		if (forwardedUrl != null) {
+			return ServerWebExchangeMatcher.MatchResult.match();
+		}
+		return ServerWebExchangeMatcher.MatchResult.notMatch();
+	};
+
+
 	@Bean
 	public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
 		http
+				.securityMatcher(matcher)// process only request with forwardUrl
+				.addFilterAt(new HeaderFilter(), SecurityWebFiltersOrder.FIRST)
+				.addFilterAt(new UndoHeaderFilter(), SecurityWebFiltersOrder.LAST)
 				.csrf().disable()
 				.authorizeExchange()
-				.pathMatchers("/v2/**").hasRole("ADMIN")
-				.matchers(EndpointRequest.to("info", "health")).permitAll()
-				.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
-				.pathMatchers("/images/**").permitAll()
-				.pathMatchers("/**").authenticated()
+//				.pathMatchers("/v2/**").hasRole("ADMIN")
+//				.matchers(EndpointRequest.to("info", "health")).permitAll()
+//				.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
+//				.pathMatchers("/images/**").permitAll()
+				.anyExchange().authenticated()
+				.and().formLogin()
 				.and().httpBasic();
 		return http.build();
 	}
