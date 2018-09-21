@@ -39,8 +39,8 @@ servicecatalogconfig:
     - id: 3944a61c-ed68-45c5-b649-a99d1f301c69
       configs:
       - name: trial
-        replenishRate: 3
-        burstCapacity: 3
+        replenishRate: 5
+        burstCapacity: 5
       - name: basic
         replenishRate: 10
         burstCapacity: 15

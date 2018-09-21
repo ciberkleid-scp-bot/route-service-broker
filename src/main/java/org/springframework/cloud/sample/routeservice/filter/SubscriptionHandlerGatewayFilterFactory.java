@@ -13,10 +13,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern.PathMatchInfo;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -49,47 +51,28 @@ public class SubscriptionHandlerGatewayFilterFactory extends AbstractGatewayFilt
             String serviceId = getServiceInstanceId(exchange);
 
             return getUserRole(exchange).single().flatMap(role -> {
+                log.info("User role: {}", role.getAuthority());
                 // TODO: If limiter is null (e.g. no premium plan was defined), default to trial? Currently line "limiter.isAllowed" below throws NullPointerException
                 RedisRateLimiter limiter = rateLimiters.getLimiter(serviceId.concat(role.getAuthority().substring(4)));
-
-                String forwardedUrl = exchange.getRequest().getHeaders().getFirst(X_CF_FORWARDED_URL);
-                Optional<URI> forwardedUri = Optional.ofNullable(forwardedUrl).map(url -> {
-                    try {
-                        return new URL(url).toURI();
-                    } catch (MalformedURLException | URISyntaxException e) {
-                        log.info("Request url is invalid : url={}, error={}", forwardedUrl,
-                                e.getMessage());
-                        return null;
-                    }
-                });
-
-                if (forwardedUri.get().getPath().equals("/logout")) {
-                    // Set cookie with user role as type
-                    log.info("Clearing cookie 'type' field");
-                    ResponseCookie cookie = ResponseCookie.from("type", "").path("/").build();
-                    exchange.getResponse().addCookie(cookie);
-                } else {
-                    // Set cookie with user role as type
-                    log.info("Setting cookie with type={}", role.getAuthority().substring(5).toLowerCase());
-                    ResponseCookie cookie = ResponseCookie.from("type", role.getAuthority().substring(5).toLowerCase()).path("/").build();
-                    exchange.getResponse().addCookie(cookie);
-                }
 
                 Route route = exchange.getAttribute(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);
 
                 return resolver.resolve(exchange).flatMap(key ->
-                        limiter.isAllowed(route.getId(), key).flatMap(response -> {
-                            for (Map.Entry<String, String> header : response.getHeaders().entrySet()) {
-                                exchange.getResponse().getHeaders().add(header.getKey(), header.getValue());
-                            }
+                        {
+                            log.info("Key: {}", key);
+                            return limiter.isAllowed(route.getId(), key).flatMap(response -> {
+                                for (Map.Entry<String, String> header : response.getHeaders().entrySet()) {
+                                    exchange.getResponse().getHeaders().add(header.getKey(), header.getValue());
+                                }
 
-                            if (response.isAllowed()) {
-                                return chain.filter(exchange);
-                            }
+                                if (response.isAllowed()) {
+                                    return chain.filter(exchange);
+                                }
 
-                            exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-                            return exchange.getResponse().setComplete();
-                        }));
+                                exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
+                                return exchange.getResponse().setComplete();
+                            });
+                        });
             });
         };
     }
@@ -102,6 +85,7 @@ public class SubscriptionHandlerGatewayFilterFactory extends AbstractGatewayFilt
 
     private Flux<GrantedAuthority> getUserRole(ServerWebExchange exchange) {
         return exchange.getPrincipal().cast(Authentication.class).flatMapIterable(a -> a.getAuthorities());
+//        return Flux.just(new SimpleGrantedAuthority("ROLE_PREMIUM"));
     }
 
 

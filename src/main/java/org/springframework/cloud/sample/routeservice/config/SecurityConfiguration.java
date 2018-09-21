@@ -59,7 +59,8 @@ public class SecurityConfiguration {
 //				.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
 //				.pathMatchers("/images/**").permitAll()
 				.anyExchange().authenticated()
-				.and().formLogin()
+				.and().logout().logoutSuccessHandler(new RoleBasedServerLogoutSuccessHandler())
+				.and().formLogin().authenticationSuccessHandler(new RoleBasedAuthenticationSuccessHandler())
 				.and().httpBasic();
 		return http.build();
 	}
