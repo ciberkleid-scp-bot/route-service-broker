@@ -55,11 +55,25 @@ public class SecurityConfiguration {
 
 	@Bean
 	public MapReactiveUserDetailsService userDetailsService() {
+		// @formatter:off
 		User.UserBuilder builder = User.withDefaultPasswordEncoder();
-		UserDetails admin = builder.username("admin").password("supersecret").roles("ADMIN").build();
-		UserDetails trial = builder.username("trial").password("pw").roles("TRIAL").build();
-		UserDetails basic = builder.username("basic").password("pw").roles("BASIC").build();
-		UserDetails premium = builder.username("premium").password("pw").roles("PREMIUM").build();
+		UserDetails admin = builder.username("admin")
+				.password("supersecret")
+				.roles("ADMIN")
+				.build();
+		UserDetails trial = builder.username("trial")
+				.password("pw")
+				.roles("TRIAL")
+				.build();
+		UserDetails basic = builder.username("basic")
+				.password("pw")
+				.roles("BASIC")
+				.build();
+		UserDetails premium = builder.username("premium")
+				.password("pw")
+				.roles("PREMIUM")
+				.build();
+		// @formatter:on
 		return new MapReactiveUserDetailsService(admin, trial, premium, basic);
 	}
 
