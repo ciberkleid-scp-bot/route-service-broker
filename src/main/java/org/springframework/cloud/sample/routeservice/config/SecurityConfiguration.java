@@ -31,50 +31,50 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 @EnableWebFluxSecurity
 public class SecurityConfiguration {
 
-	@Bean
-	public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
-		// @formatter:off
-		http
-			.addFilterAt(new HeaderFilter(), SecurityWebFiltersOrder.FIRST)
-			.addFilterAt(new UndoHeaderFilter(), SecurityWebFiltersOrder.LAST)
-			.addFilterAt(new RoleTypeWebFilter(), SecurityWebFiltersOrder.LAST)
-			.csrf().disable()
-			.authorizeExchange()
-				.pathMatchers("/v2/**").hasRole("ADMIN")
-				.matchers(EndpointRequest.to("info", "health")).permitAll()
-				.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
-				.pathMatchers("/images/**").permitAll()
-				.anyExchange().authenticated()
-				.and()
-			.formLogin()
-				.and()
-			.httpBasic();
-		// @formatter:on
-		return http.build();
-	}
+    @Bean
+    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+        // @formatter:off
+        http
+            .addFilterAt(new HeaderFilter(), SecurityWebFiltersOrder.FIRST)
+            .addFilterAt(new UndoHeaderFilter(), SecurityWebFiltersOrder.LAST)
+            .addFilterAt(new RoleTypeWebFilter(), SecurityWebFiltersOrder.LAST)
+            .csrf().disable()
+            .authorizeExchange()
+                .pathMatchers("/v2/**").hasRole("ADMIN")
+                .matchers(EndpointRequest.to("info", "health")).permitAll()
+                .matchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
+                .pathMatchers("/images/**").permitAll()
+                .anyExchange().authenticated()
+                .and()
+            .formLogin()
+                .and()
+            .httpBasic();
+        // @formatter:on
+        return http.build();
+    }
 
-	@Bean
-	public MapReactiveUserDetailsService userDetailsService() {
-		// @formatter:off
-		User.UserBuilder builder = User.withDefaultPasswordEncoder();
-		UserDetails admin = builder.username("admin")
-				.password("supersecret")
-				.roles("ADMIN")
-				.build();
-		UserDetails trial = builder.username("trial")
-				.password("pw")
-				.roles("TRIAL")
-				.build();
-		UserDetails basic = builder.username("basic")
-				.password("pw")
-				.roles("BASIC")
-				.build();
-		UserDetails premium = builder.username("premium")
-				.password("pw")
-				.roles("PREMIUM")
-				.build();
-		// @formatter:on
-		return new MapReactiveUserDetailsService(admin, trial, premium, basic);
-	}
+    @Bean
+    public MapReactiveUserDetailsService userDetailsService() {
+        // @formatter:off
+        User.UserBuilder builder = User.withDefaultPasswordEncoder();
+        UserDetails admin = builder.username("admin")
+                .password("supersecret")
+                .roles("ADMIN")
+                .build();
+        UserDetails trial = builder.username("trial")
+                .password("pw")
+                .roles("TRIAL")
+                .build();
+        UserDetails basic = builder.username("basic")
+                .password("pw")
+                .roles("BASIC")
+                .build();
+        UserDetails premium = builder.username("premium")
+                .password("pw")
+                .roles("PREMIUM")
+                .build();
+        // @formatter:on
+        return new MapReactiveUserDetailsService(admin, trial, premium, basic);
+    }
 
 }
