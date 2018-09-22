@@ -25,58 +25,56 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
-
-import static org.springframework.cloud.gateway.handler.predicate.CloudFoundryRouteServiceRoutePredicateFactory.X_CF_FORWARDED_URL;
 
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfiguration {
 
-	private ServerWebExchangeMatcher matcher = exchange -> {
+    @Bean
+    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+        // @formatter:off
+        http
+            .addFilterAt(new HeaderFilter(), SecurityWebFiltersOrder.FIRST)
+            .addFilterAt(new UndoHeaderFilter(), SecurityWebFiltersOrder.LAST)
+            .addFilterAt(new RoleTypeWebFilter(), SecurityWebFiltersOrder.LAST)
+            .csrf().disable()
+            .authorizeExchange()
+                .pathMatchers("/v2/**").hasRole("ADMIN")
+                .matchers(EndpointRequest.to("info", "health")).permitAll()
+                .matchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
+                .pathMatchers("/images/**").permitAll()
+                .anyExchange().authenticated()
+                .and()
+            .formLogin()
+                .and()
+            .httpBasic();
+        // @formatter:on
+        return http.build();
+    }
 
-		String forwardedUrl = exchange.getRequest().getHeaders().getFirst(X_CF_FORWARDED_URL);
-		if (forwardedUrl != null) {
-			return ServerWebExchangeMatcher.MatchResult.match();
-		}
-		return ServerWebExchangeMatcher.MatchResult.notMatch();
-	};
-
-
-	@Bean
-	public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
-		http
-				.securityMatcher(matcher)// process only request with forwardUrl
-				.addFilterAt(new HeaderFilter(), SecurityWebFiltersOrder.FIRST)
-				.addFilterAt(new UndoHeaderFilter(), SecurityWebFiltersOrder.LAST)
-				.csrf().disable()
-				.authorizeExchange()
-//				.pathMatchers("/v2/**").hasRole("ADMIN")
-//				.matchers(EndpointRequest.to("info", "health")).permitAll()
-//				.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
-//				.pathMatchers("/images/**").permitAll()
-				.anyExchange().authenticated()
-				.and().logout().logoutSuccessHandler(new RoleBasedServerLogoutSuccessHandler())
-				.and().formLogin().authenticationSuccessHandler(new RoleBasedAuthenticationSuccessHandler())
-				.and().httpBasic();
-		return http.build();
-	}
-
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
-
-	@Bean
-	public MapReactiveUserDetailsService userDetailsService() {
-		UserDetails admin = User.builder().username("admin").password(passwordEncoder().encode("supersecret")).roles("ADMIN").build();
-		UserDetails trial = User.builder().username("trial").password(passwordEncoder().encode("pw")).roles("TRIAL").build();
-		UserDetails basic = User.builder().username("basic").password(passwordEncoder().encode("pw")).roles("BASIC").build();
-		UserDetails premium = User.builder().username("premium").password(passwordEncoder().encode("pw")).roles("PREMIUM").build();
-		return new MapReactiveUserDetailsService(admin, trial, premium, basic);
-	}
+    @Bean
+    public MapReactiveUserDetailsService userDetailsService() {
+        // @formatter:off
+        User.UserBuilder builder = User.withDefaultPasswordEncoder();
+        UserDetails admin = builder.username("admin")
+                .password("supersecret")
+                .roles("ADMIN")
+                .build();
+        UserDetails trial = builder.username("trial")
+                .password("pw")
+                .roles("TRIAL")
+                .build();
+        UserDetails basic = builder.username("basic")
+                .password("pw")
+                .roles("BASIC")
+                .build();
+        UserDetails premium = builder.username("premium")
+                .password("pw")
+                .roles("PREMIUM")
+                .build();
+        // @formatter:on
+        return new MapReactiveUserDetailsService(admin, trial, premium, basic);
+    }
 
 }
