@@ -10,24 +10,15 @@ import org.springframework.cloud.gateway.route.Route;
 import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
 import org.springframework.cloud.sample.routeservice.servicebroker.RateLimiters;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern.PathMatchInfo;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Map;
-import java.util.Optional;
 
-import static org.springframework.cloud.gateway.handler.predicate.CloudFoundryRouteServiceRoutePredicateFactory.X_CF_FORWARDED_URL;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
 
 @Component
@@ -85,7 +76,6 @@ public class SubscriptionHandlerGatewayFilterFactory extends AbstractGatewayFilt
 
     private Flux<GrantedAuthority> getUserRole(ServerWebExchange exchange) {
         return exchange.getPrincipal().cast(Authentication.class).flatMapIterable(a -> a.getAuthorities());
-//        return Flux.just(new SimpleGrantedAuthority("ROLE_PREMIUM"));
     }
 
 
