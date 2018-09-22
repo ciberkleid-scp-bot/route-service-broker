@@ -28,40 +28,30 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
-
-import static org.springframework.cloud.gateway.handler.predicate.CloudFoundryRouteServiceRoutePredicateFactory.X_CF_FORWARDED_URL;
 
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfiguration {
 
-	private ServerWebExchangeMatcher matcher = exchange -> {
-
-		String forwardedUrl = exchange.getRequest().getHeaders().getFirst(X_CF_FORWARDED_URL);
-		if (forwardedUrl != null) {
-			return ServerWebExchangeMatcher.MatchResult.match();
-		}
-		return ServerWebExchangeMatcher.MatchResult.notMatch();
-	};
-
-
 	@Bean
 	public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+		// @formatter:off
 		http
-				.securityMatcher(matcher)// process only request with forwardUrl
-				.addFilterAt(new HeaderFilter(), SecurityWebFiltersOrder.FIRST)
-				.addFilterAt(new UndoHeaderFilter(), SecurityWebFiltersOrder.LAST)
-				.addFilterAt(new RoleTypeWebFilter(), SecurityWebFiltersOrder.LAST)
-				.csrf().disable()
-				.authorizeExchange()
-//				.pathMatchers("/v2/**").hasRole("ADMIN")
-//				.matchers(EndpointRequest.to("info", "health")).permitAll()
-//				.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
-//				.pathMatchers("/images/**").permitAll()
+			.addFilterAt(new HeaderFilter(), SecurityWebFiltersOrder.FIRST)
+			.addFilterAt(new UndoHeaderFilter(), SecurityWebFiltersOrder.LAST)
+			.addFilterAt(new RoleTypeWebFilter(), SecurityWebFiltersOrder.LAST)
+			.csrf().disable()
+			.authorizeExchange()
+				.pathMatchers("/v2/**").hasRole("ADMIN")
+				.matchers(EndpointRequest.to("info", "health")).permitAll()
+				.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
+				.pathMatchers("/images/**").permitAll()
 				.anyExchange().authenticated()
-				.and().formLogin()
-				.and().httpBasic();
+				.and()
+			.formLogin()
+				.and()
+			.httpBasic();
+		// @formatter:on
 		return http.build();
 	}
 
