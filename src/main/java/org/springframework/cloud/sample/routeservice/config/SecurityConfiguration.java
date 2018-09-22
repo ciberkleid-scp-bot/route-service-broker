@@ -52,6 +52,7 @@ public class SecurityConfiguration {
 				.securityMatcher(matcher)// process only request with forwardUrl
 				.addFilterAt(new HeaderFilter(), SecurityWebFiltersOrder.FIRST)
 				.addFilterAt(new UndoHeaderFilter(), SecurityWebFiltersOrder.LAST)
+				.addFilterAt(new RoleTypeWebFilter(), SecurityWebFiltersOrder.LAST)
 				.csrf().disable()
 				.authorizeExchange()
 //				.pathMatchers("/v2/**").hasRole("ADMIN")
@@ -59,8 +60,7 @@ public class SecurityConfiguration {
 //				.matchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
 //				.pathMatchers("/images/**").permitAll()
 				.anyExchange().authenticated()
-				.and().logout().logoutSuccessHandler(new RoleBasedServerLogoutSuccessHandler())
-				.and().formLogin().authenticationSuccessHandler(new RoleBasedAuthenticationSuccessHandler())
+				.and().formLogin()
 				.and().httpBasic();
 		return http.build();
 	}
