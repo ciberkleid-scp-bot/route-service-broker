@@ -62,10 +62,12 @@ public class SecurityConfiguration {
 
 	@Bean
 	public MapReactiveUserDetailsService userDetailsService() {
-		UserDetails admin = User.builder().username("admin").password(passwordEncoder().encode("supersecret")).roles("ADMIN").build();
-		UserDetails trial = User.builder().username("trial").password(passwordEncoder().encode("pw")).roles("TRIAL").build();
-		UserDetails basic = User.builder().username("basic").password(passwordEncoder().encode("pw")).roles("BASIC").build();
-		UserDetails premium = User.builder().username("premium").password(passwordEncoder().encode("pw")).roles("PREMIUM").build();
+		User.UserBuilder builder = User.builder()
+				.passwordEncoder(passwordEncoder()::encode);
+		UserDetails admin = builder.username("admin").password("supersecret").roles("ADMIN").build();
+		UserDetails trial = builder.username("trial").password("pw").roles("TRIAL").build();
+		UserDetails basic = builder.username("basic").password("pw").roles("BASIC").build();
+		UserDetails premium = builder.username("premium").password("pw").roles("PREMIUM").build();
 		return new MapReactiveUserDetailsService(admin, trial, premium, basic);
 	}
 
